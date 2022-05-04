@@ -3,11 +3,12 @@ using IdentityServer4.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SfPUT.Identity.Models;
+using SfPUT.Identity.Services;
 using SfPUT.Identity.ViewModels;
 
 namespace SfPUT.Identity.Controllers
 {
-    public class AuthController: Controller
+    public class AuthController : Controller
     {
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserManager<AppUser> _userManager;
@@ -47,6 +48,11 @@ namespace SfPUT.Identity.Controllers
                 return View(viewModel);
             }
 
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                ModelState.AddModelError(string.Empty, "You did not confirm your password.");
+                return View(viewModel);
+            }
             var result = await _signInManager.PasswordSignInAsync(viewModel.Username,
                 viewModel.Password, false, false);
             if (result.Succeeded)
@@ -83,11 +89,44 @@ namespace SfPUT.Identity.Controllers
             var result = await _userManager.CreateAsync(user, viewModel.Password);
             if (result.Succeeded)
             {
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var callbackUrl = Url.Action(
+                    action: "ConfirmEmail",
+                    controller: "Auth",
+                    values: new { userId = user.Id, code = code, returnUrl = viewModel.ReturnUrl },
+                    protocol: HttpContext.Request.Scheme
+                );
+                var emailService = new EmailService();
+                await emailService.SendEmailAsync(viewModel.Email, "Confirm your account",
+                    $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>link</a>");
                 await _signInManager.SignInAsync(user, false);
-                return Redirect(viewModel.ReturnUrl);
+                return Content(
+                    "Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
+                // return Redirect(viewModel.ReturnUrl);
             }
             ModelState.AddModelError(string.Empty, "Error occurred");
             return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail(string userId, string code, string returnUrl)
+        {
+            if (userId == null || code == null)
+            {
+                return View("Error");
+            }
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return View("Error");
+            }
+            var result = await _userManager.ConfirmEmailAsync(user, code);
+            if (result.Succeeded)
+            {
+                return Redirect(returnUrl);
+            }
+
+            return View("Error");
         }
 
         [HttpGet]
