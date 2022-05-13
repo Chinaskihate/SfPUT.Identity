@@ -11,7 +11,7 @@ namespace SfPUT.Identity.Services
         {
             var emailMessage = new MimeMessage();
 
-            emailMessage.From.Add(new MailboxAddress("Администрация сайта", "searchclothesbytags@gmail.com"));
+            emailMessage.From.Add(new MailboxAddress("Администрация сайта", "products.using.tags@gmail.com"));
             emailMessage.To.Add(new MailboxAddress("", email));
             emailMessage.Subject = subject;
             emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html)
@@ -19,8 +19,9 @@ namespace SfPUT.Identity.Services
                 Text = message
             };
 
-            string emailSender = "searchclothesbytags@gmail.com";
-            string password = "password";
+            // TODO: remove before commit, better to put it in a separate file.
+            string emailSender = "products.using.tags@gmail.com";
+            string password = "CY34%26qLzQ9";
 
             using (var client = new SmtpClient())
             {

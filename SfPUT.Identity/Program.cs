@@ -17,8 +17,8 @@ namespace SfPUT.Identity
                 var serviceProvider = scope.ServiceProvider;
                 try
                 {
-                    var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-                    DatabaseInitializer.Init(context);
+                    var context = serviceProvider.GetRequiredService<AppDbContext>();
+                    DbInitializer.Init(context);
                 }
                 catch (Exception e)
                 {

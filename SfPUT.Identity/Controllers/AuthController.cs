@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Security.Claims;
+using System.Threading.Tasks;
 using IdentityServer4.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,14 +13,17 @@ namespace SfPUT.Identity.Controllers
     {
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserManager<AppUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IIdentityServerInteractionService _interactionService;
 
         public AuthController(SignInManager<AppUser> signInManager,
             UserManager<AppUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             IIdentityServerInteractionService interactionService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _roleManager = roleManager;
             _interactionService = interactionService;
         }
 
@@ -83,12 +87,18 @@ namespace SfPUT.Identity.Controllers
 
             var user = new AppUser
             {
-                UserName = viewModel.Username
+                UserName = viewModel.Username,
             };
 
+            //var roleExist = await _roleManager.RoleExistsAsync("Admin");
+            //if (!roleExist)
+            //{
+            //    await _roleManager.CreateAsync(new IdentityRole("Admin"));
+            //}
             var result = await _userManager.CreateAsync(user, viewModel.Password);
             if (result.Succeeded)
             {
+                // await _userManager.AddToRoleAsync(user, "Admin");
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = Url.Action(
                     action: "ConfirmEmail",

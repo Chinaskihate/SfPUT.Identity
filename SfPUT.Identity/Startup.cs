@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityServer4.AspNetIdentity;
 using Microsoft.AspNetCore.Identity;
@@ -31,7 +32,7 @@ namespace SfPUT.Identity
         public void ConfigureServices(IServiceCollection services)
         {
             var connectionString = AppConfiguration["DbConnection"];
-            services.AddDbContext<ApplicationDbContext>(config =>
+            services.AddDbContext<AppDbContext>(config =>
             {
                 config.UseSqlite(connectionString);
             });
@@ -44,7 +45,8 @@ namespace SfPUT.Identity
                 config.Password.RequireUppercase = false;
                 config.Password.RequiredLength = 4;
             })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
+                // .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
 
             services.AddIdentityServer()
@@ -80,6 +82,8 @@ namespace SfPUT.Identity
             app.UseRouting();
 
             app.UseIdentityServer();
+            //app.UseAuthentication();
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
